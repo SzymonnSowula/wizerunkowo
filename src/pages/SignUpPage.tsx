@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { UserPlus, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from "@/contexts/AuthContext";
-
+import logo from "../assets/logoNumber2.png";
 export default function SignUpPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -75,7 +75,8 @@ export default function SignUpPage() {
                             <CardHeader className="text-center">
                                 <div className="flex justify-center mb-4">
                                     <div className="p-3 bg-white/10 backdrop-blur-sm rounded-full">
-                                        <UserPlus className="h-8 w-8 text-white" />
+                                        <img src={logo} alt="Wizerunkowo Logo" className="h-8 w-8" />
+                                        {/* <UserPlus className="h-8 w-8 text-white" /> */}
                                     </div>
                                 </div>
                                 <CardTitle className="text-2xl font-bold">Utwórz konto</CardTitle>
