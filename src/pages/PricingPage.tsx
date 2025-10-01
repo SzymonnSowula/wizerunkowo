@@ -301,6 +301,8 @@ export default function PricingPage() {
             name: selectedPlan.name,
             price: selectedPlan.price.oneTime || selectedPlan.price.monthly || selectedPlan.price.yearly || 0,
             credits: selectedPlan.credits,
+            priceId: selectedPlan.priceId,
+            mode: selectedPlan.mode,
           }}
           onPaymentSuccess={handlePaymentSuccess}
         />

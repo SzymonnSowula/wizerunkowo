@@ -1,18 +1,4 @@
-import { loadStripe } from '@stripe/stripe-js';
-
-// Initialize Stripe
-let stripePromise: Promise<any>;
-
-export const getStripe = () => {
-  if (!stripePromise) {
-    const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-    if (!publishableKey) {
-      throw new Error('Stripe publishable key is not defined');
-    }
-    stripePromise = loadStripe(publishableKey);
-  }
-  return stripePromise;
-};
+// Stripe integration for direct API calls
 
 export interface CheckoutSessionData {
   priceId: string;
@@ -30,29 +16,73 @@ export interface CheckoutSessionResponse {
 
 export class CheckoutService {
   /**
-   * Create a checkout session
+   * Create a checkout session directly with Stripe
    */
   async createCheckoutSession(data: CheckoutSessionData): Promise<CheckoutSessionResponse> {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    if (!supabaseUrl) {
-      throw new Error('Supabase URL is not defined');
+    const stripeSecretKey = import.meta.env.VITE_STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) {
+      throw new Error('VITE_STRIPE_SECRET_KEY is required');
     }
 
-    const response = await fetch(`${supabaseUrl}/functions/v1/create-checkout-session`, {
+    // Create checkout session directly with Stripe API
+    const params = new URLSearchParams();
+    params.append('mode', data.mode || 'payment');
+    params.append('line_items[0][price]', data.priceId);
+    params.append('line_items[0][quantity]', '1');
+    params.append('success_url', data.successUrl || `${window.location.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`);
+    params.append('cancel_url', data.cancelUrl || `${window.location.origin}/pricing`);
+    
+    // Add metadata as individual key-value pairs
+    if (data.userId) {
+      params.append('metadata[user_id]', data.userId);
+    }
+    if (data.metadata?.plan_name) {
+      params.append('metadata[plan_name]', data.metadata.plan_name);
+    }
+    if (data.metadata?.credits) {
+      params.append('metadata[credits]', data.metadata.credits);
+    }
+    params.append('allow_promotion_codes', 'true');
+    params.append('billing_address_collection', 'auto');
+    params.append('customer_creation', 'if_required');
+
+    if (data.mode === 'payment') {
+      params.append('payment_intent_data[metadata][user_id]', data.userId || '');
+      if (data.metadata?.plan_name) {
+        params.append('payment_intent_data[metadata][plan_name]', data.metadata.plan_name);
+      }
+      if (data.metadata?.credits) {
+        params.append('payment_intent_data[metadata][credits]', data.metadata.credits);
+      }
+    } else if (data.mode === 'subscription') {
+      params.append('subscription_data[metadata][user_id]', data.userId || '');
+      if (data.metadata?.plan_name) {
+        params.append('subscription_data[metadata][plan_name]', data.metadata.plan_name);
+      }
+      if (data.metadata?.credits) {
+        params.append('subscription_data[metadata][credits]', data.metadata.credits);
+      }
+    }
+
+    const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        'Authorization': `Bearer ${stripeSecretKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify(data),
+      body: params,
     });
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`Failed to create checkout session: ${error}`);
+      throw new Error(`Stripe API error: ${error}`);
     }
 
-    return response.json();
+    const session = await response.json();
+    return {
+      sessionId: session.id,
+      url: session.url
+    };
   }
 
   /**
@@ -60,45 +90,39 @@ export class CheckoutService {
    */
   async redirectToCheckout(data: CheckoutSessionData): Promise<{ error?: string }> {
     try {
-      const stripe = await getStripe();
-      if (!stripe) {
-        throw new Error('Stripe failed to initialize');
-      }
-
       const { sessionId, url } = await this.createCheckoutSession(data);
       
-      // Redirect to Stripe Checkout
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: sessionId,
-      });
-
-      return { error: error?.message };
+      if (url) {
+        // Direct redirect to Stripe Checkout URL
+        window.location.href = url;
+        return {};
+      } else {
+        throw new Error('No checkout URL received from Stripe');
+      }
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
   /**
-   * Get checkout session details
+   * Get checkout session details directly from Stripe
    */
   async getCheckoutSession(sessionId: string): Promise<any> {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    if (!supabaseUrl) {
-      throw new Error('Supabase URL is not defined');
+    const stripeSecretKey = import.meta.env.VITE_STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) {
+      throw new Error('VITE_STRIPE_SECRET_KEY is required');
     }
 
-    const response = await fetch(`${supabaseUrl}/functions/v1/get-checkout-session`, {
-      method: 'POST',
+    const response = await fetch(`https://api.stripe.com/v1/checkout/sessions/${sessionId}`, {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        'Authorization': `Bearer ${stripeSecretKey}`,
       },
-      body: JSON.stringify({ sessionId }),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`Failed to get checkout session: ${error}`);
+      throw new Error(`Stripe API error: ${error}`);
     }
 
     return response.json();

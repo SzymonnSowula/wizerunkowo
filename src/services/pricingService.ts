@@ -38,41 +38,97 @@ export class PricingService {
       return this.cachedPlans;
     }
 
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    if (!supabaseUrl) {
-      throw new Error('Supabase URL is not defined');
-    }
-
     try {
-      const response = await fetch(`${supabaseUrl}/functions/v1/get-pricing`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-      });
+      // Try to fetch from Stripe API directly
+      const plans = await this.fetchPlansFromStripe();
+      
+      if (plans && plans.length > 0) {
+        // Add marketing features and CTAs
+        const enhancedPlans = plans.map(plan => this.enhancePlanWithMarketing(plan));
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Failed to fetch pricing: ${error}`);
+        // Cache the results
+        this.cachedPlans = enhancedPlans;
+        this.cacheExpiry = Date.now() + this.CACHE_DURATION;
+
+        return enhancedPlans;
+      } else {
+        throw new Error('No plans found from Stripe');
       }
-
-      const data = await response.json();
-      const plans = data.plans as PricingPlan[];
-
-      // Add marketing features and CTAs
-      const enhancedPlans = plans.map(plan => this.enhancePlanWithMarketing(plan));
-
-      // Cache the results
-      this.cachedPlans = enhancedPlans;
-      this.cacheExpiry = Date.now() + this.CACHE_DURATION;
-
-      return enhancedPlans;
     } catch (error) {
-      console.error('Error fetching pricing plans:', error);
+      console.error('Error fetching pricing plans from Stripe:', error);
       // Return fallback plans if API fails
       return this.getFallbackPlans();
     }
+  }
+
+  private async fetchPlansFromStripe(): Promise<PricingPlan[]> {
+    const stripeSecretKey = import.meta.env.VITE_STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) {
+      throw new Error('VITE_STRIPE_SECRET_KEY is required');
+    }
+
+    const response = await fetch('https://api.stripe.com/v1/prices?active=true&expand[]=data.product', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${stripeSecretKey}`,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Stripe API error: ${error}`);
+    }
+
+    const data = await response.json();
+    const prices = data.data;
+
+    // Map prices to our plan structure
+    const pricingPlans = prices.map((price: any) => {
+      const product = price.product;
+      const amount = price.unit_amount / 100; // Convert from cents
+      const currency = price.currency.toUpperCase();
+      
+      // Determine plan type based on product name or metadata
+      let planType = 'one-time';
+      let credits = 1;
+      
+      if (product.name.includes('5') || product.metadata?.credits === '5') {
+        credits = 5;
+      } else if (product.name.includes('15') || product.metadata?.credits === '15') {
+        credits = 15;
+      } else if (product.name.includes('25') || product.metadata?.credits === '25') {
+        credits = 25;
+      } else if (product.name.includes('50') || product.metadata?.credits === '50') {
+        credits = 50;
+      } else if (product.name.includes('600') || product.metadata?.credits === '600') {
+        credits = 600;
+      }
+
+      if (price.recurring) {
+        planType = price.recurring.interval === 'year' ? 'yearly' : 'monthly';
+      }
+
+      return {
+        id: product.id,
+        name: product.name,
+        description: product.description || '',
+        price: {
+          oneTime: planType === 'one-time' ? amount : undefined,
+          monthly: planType === 'monthly' ? amount : undefined,
+          yearly: planType === 'yearly' ? amount : undefined,
+        },
+        credits: credits,
+        period: planType,
+        priceId: price.id,
+        mode: price.recurring ? 'subscription' : 'payment',
+        currency: currency,
+        // Marketing prices (hardcoded for visual effect)
+        originalPrice: planType === 'one-time' ? Math.round(amount * 1.2) : undefined,
+        savings: planType === 'one-time' ? `Oszczędzasz ${Math.round(amount * 0.2)} zł` : undefined,
+      };
+    });
+
+    return pricingPlans;
   }
 
   private enhancePlanWithMarketing(plan: PricingPlan): PricingPlan {
@@ -136,27 +192,27 @@ export class PricingService {
         id: 'fallback-5',
         name: 'Pakiet 5 Zdjęć',
         description: 'Idealny na start',
-        price: { oneTime: 29 },
+        price: { oneTime: 7.99 },
         credits: 5,
         period: 'one-time',
-        priceId: 'price_5_photos',
+        priceId: 'price_1SDQglExyPEvRmdlbsERommG',
         mode: 'payment',
         currency: 'PLN',
-        originalPrice: 35,
-        savings: 'Oszczędzasz 6 zł (17%)',
+        originalPrice: 10,
+        savings: 'Oszczędzasz 2.01 zł (20%)',
       },
       {
-        id: 'fallback-10',
-        name: 'Pakiet 10 Zdjęć',
+        id: 'fallback-15',
+        name: 'Pakiet 15 Zdjęć',
         description: 'Najpopularniejszy',
-        price: { oneTime: 49 },
-        credits: 10,
+        price: { oneTime: 12.99 },
+        credits: 15,
         period: 'one-time',
-        priceId: 'price_10_photos',
+        priceId: 'price_1SDWWwExyPEvRmdle0kw4gdq',
         mode: 'payment',
         currency: 'PLN',
-        originalPrice: 70,
-        savings: 'Oszczędzasz 21 zł (30%)',
+        originalPrice: 18,
+        savings: 'Oszczędzasz 5.01 zł (28%)',
         popular: true,
       },
     ];
