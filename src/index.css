@@ -1,0 +1,293 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+:root {
+    /* Professional AI Photo App Design System */
+    --background: 0 0% 100%;
+    --foreground: 228 12% 8%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 228 12% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 228 12% 8%;
+
+    /* Primary: Professional Blue Gradient */
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 217 91% 55%;
+    --primary-active: 217 91% 50%;
+
+    /* Secondary: Light Gray */
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 228 12% 8%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.75rem;
+
+    /* Custom Design Tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(234 89% 74%));
+    --gradient-hero: linear-gradient(135deg, hsl(217 91% 35%), hsl(234 89% 54%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 14% 98%));
+    
+    /* Photo Style Gradients */
+    --gradient-linkedin: linear-gradient(135deg, hsl(217 91% 60%), hsl(234 89% 74%));
+    --gradient-startup: linear-gradient(135deg, hsl(270 85% 65%), hsl(270 85% 70%));
+    --gradient-corporate: linear-gradient(135deg, hsl(220 13% 46%), hsl(220 13% 36%));
+    --gradient-cv: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 71% 55%));
+    
+    --shadow-elegant: 0 4px 24px -2px hsl(217 91% 60% / 0.12);
+    --shadow-card: 0 2px 16px -4px hsl(220 13% 26% / 0.08);
+    --shadow-upload: 0 8px 32px -8px hsl(217 91% 60% / 0.2);
+    
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 228 12% 6%;
+    --foreground: 220 14% 96%;
+
+    --card: 228 12% 8%;
+    --card-foreground: 220 14% 96%;
+
+    --popover: 228 12% 8%;
+    --popover-foreground: 220 14% 96%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 217 91% 65%;
+    --primary-active: 217 91% 70%;
+
+    --secondary: 220 13% 14%;
+    --secondary-foreground: 220 14% 96%;
+
+    --muted: 220 13% 14%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 18%;
+    --input: 220 13% 18%;
+    --ring: 217 91% 60%;
+
+    /* Dark Mode Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(234 89% 74%));
+    --gradient-hero: linear-gradient(135deg, hsl(217 91% 25%), hsl(234 89% 35%));
+    --gradient-card: linear-gradient(145deg, hsl(228 12% 8%), hsl(220 13% 10%));
+    
+    --shadow-elegant: 0 4px 24px -2px hsl(0 0% 0% / 0.3);
+    --shadow-card: 0 2px 16px -4px hsl(0 0% 0% / 0.2);
+    --shadow-upload: 0 8px 32px -8px hsl(217 91% 60% / 0.3);
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom Animations */
+@keyframes float-very-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(1deg); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(2deg); }
+}
+
+@keyframes float-medium {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(-1deg); }
+}
+
+@keyframes float-fast {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-5px) rotate(1deg); }
+}
+
+@keyframes float-particle {
+  0%, 100% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.3; }
+  25% { transform: translateY(-30px) translateX(10px) scale(1.1); opacity: 0.6; }
+  50% { transform: translateY(-60px) translateX(-5px) scale(0.9); opacity: 0.8; }
+  75% { transform: translateY(-30px) translateX(-10px) scale(1.05); opacity: 0.5; }
+}
+
+@keyframes grid-move {
+  0% { transform: translateX(0) translateY(0); }
+  100% { transform: translateX(50px) translateY(50px); }
+}
+
+@keyframes grid-move-slow {
+  0% { transform: translateX(0) translateY(0); }
+  100% { transform: translateX(80px) translateY(80px); }
+}
+
+@keyframes string-wave {
+  0%, 100% { 
+    transform: translateY(0px) scaleY(1);
+    opacity: 0.3;
+  }
+  25% { 
+    transform: translateY(-10px) scaleY(1.2);
+    opacity: 0.6;
+  }
+  50% { 
+    transform: translateY(-5px) scaleY(0.8);
+    opacity: 0.8;
+  }
+  75% { 
+    transform: translateY(8px) scaleY(1.1);
+    opacity: 0.5;
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.4); }
+}
+
+/* Animation Classes */
+.animate-float-very-slow {
+  animation: float-very-slow 12s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.animate-float-medium {
+  animation: float-medium 6s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.animate-float-fast {
+  animation: float-fast 4s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.animate-pulse-slow {
+  animation: pulse 6s ease-in-out infinite;
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
+.animate-float-particle {
+  animation: float-particle 8s ease-in-out infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+.animate-grid-move {
+  animation: grid-move 20s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.animate-grid-move-slow {
+  animation: grid-move-slow 40s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.animate-string-wave {
+  animation: string-wave 8s ease-in-out infinite;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+  will-change: box-shadow;
+  transform: translateZ(0);
+}
+
+/* Gradient Utilities */
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
+/* Glass Morphism Effects */
+.glass-morphism {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-morphism-dark {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
