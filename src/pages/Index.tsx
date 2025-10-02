@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { photoGenerationService } from '@/services/photoGenerationService';
 import LandingPage from './LandingPage';
 import GeneratorPage from './GeneratorPage';
 import { type PhotoStyle } from '@/components/StyleSelector';
@@ -25,14 +25,6 @@ const Index = () => {
     setGeneratedImage(null);
   };
 
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
 
   const handleGenerate = async () => {
     if (!uploadedFile) {
@@ -43,29 +35,35 @@ const Index = () => {
       });
       return;
     }
+
+    // Validate file
+    const validation = photoGenerationService.validateImageFile(uploadedFile);
+    if (!validation.valid) {
+      toast({
+        title: "Nieprawidłowy plik",
+        description: validation.error,
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsGenerating(true);
     try {
-      const imageData = await convertFileToBase64(uploadedFile);
-      const { data, error } = await supabase.functions.invoke('generate-professional-photo', {
-        body: { 
-          imageData,
-          style: selectedStyle 
-        }
+      const result = await photoGenerationService.generatePhoto({
+        image: uploadedFile,
+        style: selectedStyle,
+        quality: 'high',
+        aspectRatio: '1:1'
       });
-      if (error) {
-        throw new Error(error.message || 'Failed to generate photo');
-      }
-      if (data?.error) {
-        throw new Error(data.error);
-      }
-      if (data?.generatedImage) {
-        setGeneratedImage(data.generatedImage);
+
+      if (result.success && result.generatedImage) {
+        setGeneratedImage(result.generatedImage);
         toast({
           title: "Zdjęcie wygenerowane pomyślnie!",
           description: "Twoje profesjonalne zdjęcie jest gotowe do pobrania"
         });
       } else {
-        throw new Error('No image received from AI service');
+        throw new Error(result.error || 'Nie udało się wygenerować zdjęcia');
       }
     } catch (error: any) {
       toast({
